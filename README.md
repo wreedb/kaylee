@@ -22,6 +22,7 @@ mv lib/presenter.nim ~/.nimble/pkgs/yaml-your-version-here/yaml/presenter.nim
 > Run the Nim compiler
 ```
 nim compileToC -d:ssl -d:release --threads:on --app:console --opt:speed -o:kaylee kaylee.nim
+./kaylee u
 ```
 > You can run Kaylee by using either:
 ```
