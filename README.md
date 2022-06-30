@@ -45,4 +45,4 @@ kaylee [option] (argument)
 * option **u** will update any your outdated AUR packages
 
 ## Feedback  
-> There will be bugs! I am seeking feedback on the project and I am not opposed to letting others contribute if I think the contributions are good for Kaylee. To give feedback, you can [email me here](wreedb@yandex.com).
+> There will be bugs! I am seeking feedback on the project and I am not opposed to letting others contribute if I think the contributions are good for Kaylee. To give feedback, you can [email me here](mailto:wreedb@yandex.com).
