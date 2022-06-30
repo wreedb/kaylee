@@ -16,7 +16,7 @@ sudo pacman -S nim perl
 ```
 git clone https://github.com/wvanisb/kaylee  ## or ##  gh repo clone wvanisb/kaylee
 cd kaylee
-nimble install
+nimble install yaml
 mv lib/presenter.nim ~/.nimble/pkgs/yaml-your-version-here/yaml/presenter.nim
 ```
 > Run the Nim compiler
