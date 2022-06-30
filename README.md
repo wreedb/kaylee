@@ -18,6 +18,7 @@ git clone https://github.com/wvanisb/kaylee  ## or ##  gh repo clone wvanisb/kay
 cd kaylee
 nimble install yaml
 mv lib/presenter.nim ~/.nimble/pkgs/yaml-your-version-here/yaml/presenter.nim
+nimble install
 ```
 > Run the Nim compiler
 ```
