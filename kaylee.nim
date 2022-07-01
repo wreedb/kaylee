@@ -27,7 +27,6 @@ if cli.empty:
 var firstarg = toLowerAscii(cli.first);
 let secondarg = toLowerAscii(cli.second);
 
-
 const opts = ["s", "u", "i", "q", "r", "h", "help"]
 
 if not opts.contains(firstarg):

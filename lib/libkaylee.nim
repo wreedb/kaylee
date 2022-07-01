@@ -3,13 +3,18 @@ import os, osproc, ./textfmt, ./objects;
 import yaml/serialization, streams;
 import zippy/tarballs;
 
-proc getuserhome*(): string =
-  result = getEnv("HOME");
 
 const homeDir*: string = getEnv("HOME")
 let fileloc*: string = &"{homeDir}/.cache/kaylee/packages.yaml"
 
-#[ confirmInstall ]#
+
+iterator countTo*(n: int): int =
+  var i = 0
+  while i < n:
+    yield i
+    inc i
+
+
 proc confirmInstall*(name: string): bool = #? installation confirmation
   stdout.write(&" {fm(6)}::{fm(9)} Confirm installation [{fm(8)}y{fm(9)}/{fm(5)}N{fm(9)}] ");
   var choice: string = stdin.readLine();
@@ -30,20 +35,20 @@ proc createMyYaml*() = #? update/create the yaml file
   if outp.len == 0:
     echo "you have no AUR packages installed."; quit(0); #! quit the program if they have no packages.
   discard outp.pop()
-  var incc = 0;
-  while incc < outp.len:
-    var thispkg = outp[incc].value
+
+  for i in countTo(outp.len):
+    var thispkg = outp[i].value
     let ap = &"&arg[]={thispkg}"
     appndstr.add(ap)
-    inc incc
+
   var client = newHttpClient();
   let response = client.getContent(appndstr);
   let parsed = parseJson(response);
   let packagelist = parsed{"results"};
-  var n: int = 0;
   var pkglist = newSeq[Package]()
-  while n < packagelist.len:
-    var package = to(packagelist[n], Package);
+
+  for i in countTo(packagelist.len):
+    var package = to(packagelist[i], Package);
     let
       pkgname: string = chkMtStr(package.Name, "name")
       pkgdesc: string = chkMtStr(package.Description, "description")
@@ -61,7 +66,6 @@ proc createMyYaml*() = #? update/create the yaml file
       URLPath: pkgurl,
       NumVotes: pkgvote);
     pkglist.add(newPkg)
-    inc n;
   
   var s = newFileStream(fileloc, fmWrite)
   dump(pkglist, s)
@@ -70,12 +74,12 @@ proc createMyYaml*() = #? update/create the yaml file
 
 proc updatepkglist*(): string = #? update local yaml
   #? loads installed packages from local file
-  var snew = newFileStream(fileloc, fmRead)
+  var ss = newFileStream(fileloc, fmRead)
   var pkgs: seq[Package] = @[]
-  load(snew, pkgs)
-  snew.close()
+  load(ss, pkgs)
+  ss.close()
+
   #? creates the query string for the packages
-  #var client = newHttpClient();
   var appndstr = "https://aur.archlinux.org/rpc?v=5&type=info"
   let pacQ = execCmdEx("pacman -Qqem | perl -pe 's/^/\\${/g' | perl -pe 's/\n$/}/g'")
   var outp: seq[tuple[kind: InterpolatedKind, value: string]] = @[]
@@ -84,20 +88,20 @@ proc updatepkglist*(): string = #? update local yaml
   if outp.len == 0:
     echo "you have no AUR packages installed."; quit(0); #! quit the program if they have no packages.
   discard outp.pop()
-  var incc = 0;
-  while incc < outp.len:
-    var thispkg = outp[incc].value
+
+  for i in countTo(outp.len):
+    var thispkg = outp[i].value
     let ap = &"&arg[]={thispkg}"
-    appndstr.add(ap)
-    inc incc
+    appndstr.add(ap);
+
   var client = newHttpClient();
   let response = client.getContent(appndstr);
   let parsed = parseJson(response);
   let packagelist = parsed{"results"};
-  var n: int = 0;
   var pkglist = newSeq[Package]()
-  while n < packagelist.len:
-    var package = to(packagelist[n], Package);
+
+  for i in countTo(packagelist.len):
+    var package = to(packagelist[i], Package);
     let
       pkgname: string = chkMtStr(package.Name, "name")
       pkgdesc: string = chkMtStr(package.Description, "description")
@@ -115,7 +119,6 @@ proc updatepkglist*(): string = #? update local yaml
       URLPath: pkgurl,
       NumVotes: pkgvote);
     pkglist.add(newPkg)
-    inc n;
   
   var s = newFileStream(fileloc, fmWrite)
   dump(pkglist, s)
@@ -125,40 +128,44 @@ proc updatepkglist*(): string = #? update local yaml
 
 proc showInstalled*() = #? pacman -Q
   discard execShellCmd("pacman -Qqme");
+  quit(0);
 
 
-#[ removePackage ]#
 proc removePackage*(name: string) = #? pacman -Rns
   discard execShellCmd(&"sudo pacman -Rns {name}");
   discard updatepkglist();
   quit(0);
 
 
-#[ search ]#
 proc search*(searchTerm: string) = #? pacman -Ss
+  var s = newFileStream(fileloc, fmRead)
+  var ipkgs: seq[Package] = @[]
+  load(s, ipkgs)
+  s.close()
+  var installedpkgs: seq[string] = @[]
+  for i in countTo(ipkgs.len):
+    installedpkgs.add(ipkgs[i].Name)
   var client = newHttpClient();
   let response = client.getContent(&"https://aur.archlinux.org/rpc?v=5&type=search&by=name-desc&arg={searchTerm}");
   let parsed = parseJson(response);
   let packagelist = parsed{"results"};
-  var n: int = 0;
-  while n < packagelist.len:
-    let package = to(packagelist[n], Package);
+  for i in countTo(packagelist.len):
+    let package = to(packagelist[i], Package);
     let 
       pkgname: string = chkMtStr(package.Name, "name")
       pkgdesc: string = chkMtStr(package.Description, "description")
       pkgvers: string = chkMtStr(package.Version, "version")
     var outputstr: string = "";
-    if searchTerm in pkgname:
-      outputstr = &"{fm(6)}{fm(0)}aur{fm(9)}/{fm(0)}{pkgname}{fm(9)} [{fm(8)}{pkgvers}{fm(9)}] ({fm(7)}*{fm(9)})\n    {pkgdesc}";
+    if installedpkgs.contains(pkgname):
+      outputstr = &"{fm(6)}{fm(0)}aur{fm(9)}/{fm(0)}{pkgname}{fm(9)} [{fm(8)}{pkgvers}{fm(9)}] * {fm(7)}Installed{fm(9)}\n    {pkgdesc}";
     else:
       outputstr = &"{fm(6)}{fm(0)}aur{fm(9)}/{fm(0)}{pkgname}{fm(9)} [{fm(8)}{pkgvers}{fm(9)}]\n    {pkgdesc}";
     echo outputstr;
-    inc n;
+
   echo &"\n {fm(6)}::{fm(9)} {fm(7)}{fm(0)}kaylee{fm(9)} says '{packagelist.len} packages found'\n";
   quit(0);
 
 
-#[ makePkg ]#
 proc makePkg*(newpath: string) = #? makepkg -si
   let cwd: string = getCurrentDir();
   setCurrentDir(newpath);
@@ -170,7 +177,6 @@ proc makePkg*(newpath: string) = #? makepkg -si
   quit(0);
 
 
-#[ dlTar ]#
 proc dlTar*(name: string): string = #? tar downloading function
   var
     cachePath: string = &"{homeDir}/.cache/kaylee"
@@ -196,21 +202,18 @@ proc dlTar*(name: string): string = #? tar downloading function
     quit(1);
 
 
-#[ install ]#
 proc install*(searchTerm: string) = #? simple install function
   var client = newHttpClient();
   let response = client.getContent(&"https://aur.archlinux.org/rpc?v=5&type=search&by=name&arg={searchTerm}")
   let
     parsed = parseJson(response)
     packagelist = parsed{"results"}
-  var n: int = 0;
   var found: string
-  while n < packagelist.len:
-    let package = to(packagelist[n], Package);
+  for i in countTo(packagelist.len):
+    let package = to(packagelist[i], Package);
     let pkgname: string = chkMtStr(package.Name, "name");
     if pkgname == searchTerm:
       found = pkgname;
-    inc n;
   if found.isEmptyOrWhitespace():
     echo "no match found"
     quit(1);
@@ -241,39 +244,36 @@ proc update*() = # TODO long convoluted update function
   if outp.len == 0:
     echo "you have no AUR packages installed."; quit(0); #! quit the program if they have no packages.
   discard outp.pop()
-  var incc = 0;
-  while incc < outp.len:
-    var thispkg = outp[incc].value
+  for i in countTo(outp.len):
+    var thispkg = outp[i].value
     let ap = &"&arg[]={thispkg}"
     appndstr.add(ap)
-    inc incc
 
   #? uses to qry string to make an array with name and last modified
   var res = client.getContent(appndstr);
   let parsed = parseJson(res);
   let packagelist = parsed{"results"};
   var pkglist = newSeq[UpdatingPackage]()
-  var n: int = 0;
-  while n < packagelist.len:
-    var package = to(packagelist[n], UpdatingPackage);
+
+  for i in countTo(packagelist.len):
+    var package = to(packagelist[i], UpdatingPackage);
     let pkgname: string = chkMtStr(package.Name, "name")
     let pkglmod: int = package.LastModified
     let newPkg: UpdatingPackage = UpdatingPackage(Name: pkgname, LastModified: pkglmod)
-    pkglist.add(newPkg)
-    inc n;
+    pkglist.add(newPkg);
 
   #? section for finding packages that need update
   var pkgsCanUpdate: seq[string] = @[];
-  var nn = 0;
-  while nn < pkglist.len:
-    var installedpkg = pkgs[nn]
-    var checkedpkg = pkglist[nn]
+
+  for i in countTo(pkglist.len):
+    var installedpkg = pkgs[i]
+    var checkedpkg = pkglist[i]
     var installedlmod = installedpkg.LastModified
     var checkedlmod = checkedpkg.LastModified
 
     if installedlmod != checkedlmod:
       pkgsCanUpdate.add(checkedpkg.Name)
-    inc nn
+
   if pkgsCanUpdate.len == 0:
     echo "no updates needed, exiting..."
     quit(0)
@@ -282,11 +282,6 @@ proc update*() = # TODO long convoluted update function
   stdout.write(&" {fm(6)}::{fm(9)} Would you like to update packages? [{fm(8)}y{fm(9)}/{fm(5)}N{fm(9)}] ");
   var choice: string = stdin.readLine();
   if toLower(choice).contains("y") or toLower(choice).contains("yes"):
-    iterator countTo(n: int): int =
-      var i = 0
-      while i < n:
-        yield i
-        inc i
     for i in countTo(pkgsCanUpdate.len):
       echo &"updating {pkgsCanUpdate[i]}"
       var
