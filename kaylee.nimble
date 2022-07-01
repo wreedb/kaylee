@@ -8,7 +8,7 @@ installExt    = @["nim"]
 bin           = @["kaylee"]
 
 # Deps
-requires "nim >= 1.4.0"
+requires "nim"
 requires "zippy"
-requires "yaml"
+requires "yaml@#heads"
 requires "https://github.com/skellock/crappycli.git"

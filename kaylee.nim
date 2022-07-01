@@ -1,4 +1,4 @@
-import lib/libkaylee, lib/textfmt;
+import lib/libkaylee;
 import crappycli;
 import std/strutils, strformat;
 import os 
@@ -42,7 +42,6 @@ proc emptyargs(secondarg: string): string =
 case firstarg:
   of "u":
     createMyYaml();
-    perlfixyaml(fileloc);
     update(); #?
     discard updatepkglist();
   of "s":
@@ -58,6 +57,5 @@ case firstarg:
       quit(1)
     else:
       createMyYaml();
-      perlfixyaml(fileloc);
       removePackage(emptyargs(secondarg));
       discard updatepkglist();

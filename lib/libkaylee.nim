@@ -27,6 +27,8 @@ proc createMyYaml*() = #? update/create the yaml file
   var outp: seq[tuple[kind: InterpolatedKind, value: string]] = @[]
   for k, v in interpolatedFragments(pacQ[0]):
     outp.add (k, v)
+  if outp.len == 0:
+    echo "you have no AUR packages installed."; quit(0); #! quit the program if they have no packages.
   discard outp.pop()
   var incc = 0;
   while incc < outp.len:
@@ -126,8 +128,7 @@ proc showInstalled*() = #? pacman -Q
 #[ removePackage ]#
 proc removePackage*(name: string) = #? pacman -Rns
   discard execShellCmd(&"sudo pacman -Rns {name}");
-  let throwaway = updatepkglist();
-  perlfixyaml(throwaway);
+  discard updatepkglist();
   quit(0);
 
 
@@ -162,8 +163,7 @@ proc makePkg*(newpath: string) = #? makepkg -si
   discard execShellCmd("makepkg -si");
   setCurrentDir(cwd);
   #? update the pkg list
-  var throwaway = updatepkglist();
-  perlfixyaml(throwaway);
+  discard updatepkglist();
 
   echo "finished install package.\n";
   quit(0);
@@ -217,7 +217,6 @@ proc install*(searchTerm: string) = #? simple install function
       quit(0);
     inc n;
   createMyYaml();
-  perlfixyaml(fileloc)
 
 
 proc update*() = # TODO long convoluted update function
@@ -309,8 +308,7 @@ proc update*() = # TODO long convoluted update function
       discard execShellCmd("makepkg -si");
       setCurrentDir(cwd);
       echo &"finished installing {pkgsCanUpdate[i]}\n";
-      var throwaway = updatepkglist();
-      perlfixyaml(throwaway);
+      discard updatepkglist();
   else:
     echo &"\n {fm(6)}::{fm(9)} {fm(7)}{fm(0)}kaylee:{fm(9)} exiting...'\n";
     quit(0);

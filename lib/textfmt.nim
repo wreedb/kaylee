@@ -1,5 +1,4 @@
 import std/strformat
-import os
 
 #[ text-fmt ]#
 func fm*(inp: int) : string = #? text formatting function
@@ -15,9 +14,6 @@ func fm*(inp: int) : string = #? text formatting function
       "\X1B[32m",         # 8 green
       "\X1B[0m"     ];    # 9 end format
   result = formats[inp];
-
-proc perlfixyaml*(fname: string) = #? for removing double quotes from yaml
-  discard execShellCmd(&"perl -pi -e 's/\"//g' {fname}")
 
 #[ checkEmpty ]#
 func chkMtStr*(inp: string, field: string): string = #? check for empty sting & replace
