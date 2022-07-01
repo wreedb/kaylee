@@ -14,16 +14,13 @@ sudo pacman -S nim perl
 ```
 > **Building**
 ```
-git clone https://github.com/wvanisb/kaylee  ## or ##  gh repo clone wvanisb/kaylee
+git clone https://github.com/wvanisb/kaylee
 cd kaylee
-nimble install yaml
-mv lib/presenter.nim ~/.nimble/pkgs/yaml-your-version-here/yaml/presenter.nim
 nimble install
 ```
 > Run the Nim compiler
 ```
-nim compileToC -d:ssl -d:release --threads:on --app:console --opt:speed -o:kaylee kaylee.nim
-./kaylee u
+nim compileToC -d:ssl -d:release --threads:on --opt:speed -o:kaylee kaylee.nim
 ```
 > You can run Kaylee by using either:
 ```
@@ -31,7 +28,7 @@ nim compileToC -d:ssl -d:release --threads:on --app:console --opt:speed -o:kayle
 ```
 > or
 ```
-sudo cp kaylee /usr/local/bin
+sudo mv kaylee /usr/local/bin
 kaylee [option] (argument)
 ```
 <br>

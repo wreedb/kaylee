@@ -1,7 +1,7 @@
-import std/httpclient,uri,strformat,strutils,json,parseutils
-import os, osproc, ./textfmt, ./objects
-import yaml/serialization, streams
-import zippy/tarballs
+import std/httpclient, uri, strformat, strutils, json, parseutils;
+import os, osproc, ./textfmt, ./objects;
+import yaml/serialization, streams;
+import zippy/tarballs;
 
 proc getuserhome*(): string =
   result = getEnv("HOME");
@@ -166,7 +166,6 @@ proc makePkg*(newpath: string) = #? makepkg -si
   setCurrentDir(cwd);
   #? update the pkg list
   discard updatepkglist();
-
   echo "finished install package.\n";
   quit(0);
 
@@ -200,25 +199,27 @@ proc dlTar*(name: string): string = #? tar downloading function
 #[ install ]#
 proc install*(searchTerm: string) = #? simple install function
   var client = newHttpClient();
-  let response = client.getContent(&"https://aur.archlinux.org/rpc?v=5&type=search&by=name-desc&arg={searchTerm}")
+  let response = client.getContent(&"https://aur.archlinux.org/rpc?v=5&type=search&by=name&arg={searchTerm}")
   let
     parsed = parseJson(response)
     packagelist = parsed{"results"}
   var n: int = 0;
+  var found: string
   while n < packagelist.len:
     let package = to(packagelist[n], Package);
     let pkgname: string = chkMtStr(package.Name, "name");
     if pkgname == searchTerm:
-      echo &"{fm(0)}--- --- --- --- --- --- --- --- ---{fm(9)}"
-      echo &" {fm(6)}::{fm(9)} {fm(7)}{fm(0)}kaylee{fm(9)} says"
-      echo &" {fm(6)}::{fm(9)} package {fm(8)}{searchTerm}{fm(9)} found"
-      echo &"{fm(0)}--- --- --- --- --- --- --- --- ---{fm(9)}"
-      makePkg(dlTar(searchTerm));
-    else:
-      echo &"\n {fm(6)}::{fm(9)} {fm(7)}{fm(0)}kaylee{fm(9)} says 'no match found, exiting...'\n";
-      quit(0);
+      found = pkgname;
     inc n;
-  createMyYaml();
+  if found.isEmptyOrWhitespace():
+    echo "no match found"
+    quit(1);
+  else:
+    echo &"{fm(0)}--- --- --- --- --- --- --- --- ---{fm(9)}"
+    echo &" {fm(6)}::{fm(9)} {fm(7)}{fm(0)}kaylee{fm(9)} says"
+    echo &" {fm(6)}::{fm(9)} package {fm(8)}{searchTerm}{fm(9)} found"
+    echo &"{fm(0)}--- --- --- --- --- --- --- --- ---{fm(9)}"
+    makePkg(dlTar(found))
 
 
 proc update*() = # TODO long convoluted update function
