@@ -81,6 +81,8 @@ proc updatepkglist*(): string = #? update local yaml
   var outp: seq[tuple[kind: InterpolatedKind, value: string]] = @[]
   for k, v in interpolatedFragments(pacQ[0]):
     outp.add (k, v)
+  if outp.len == 0:
+    echo "you have no AUR packages installed."; quit(0); #! quit the program if they have no packages.
   discard outp.pop()
   var incc = 0;
   while incc < outp.len:
@@ -235,6 +237,8 @@ proc update*() = # TODO long convoluted update function
   var outp: seq[tuple[kind: InterpolatedKind, value: string]] = @[]
   for k, v in interpolatedFragments(pacQ[0]):
     outp.add (k, v)
+  if outp.len == 0:
+    echo "you have no AUR packages installed."; quit(0); #! quit the program if they have no packages.
   discard outp.pop()
   var incc = 0;
   while incc < outp.len:

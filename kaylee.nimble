@@ -10,5 +10,5 @@ bin           = @["kaylee"]
 # Deps
 requires "nim"
 requires "zippy"
-requires "yaml@#heads"
+requires "yaml#head"
 requires "https://github.com/skellock/crappycli.git"
